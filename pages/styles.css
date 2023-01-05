@@ -66,6 +66,10 @@ body {
     color: rgba(255, 255, 255, 0.75);
 }
 
+.m2 {
+    margin: 1.2rem;
+}
+
 .prompt-container {
     place-content: flex-end center;
     align-items: center;

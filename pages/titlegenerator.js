@@ -1,9 +1,10 @@
 import Head from "next/head";
-import Image from "next/image";
 import { useState } from "react";
-import buildspaceLogo from "../assets/buildspace-logo.png";
+import ReactMarkdown from "react-markdown";
 
 const Home = () => {
+  const [titleList, settitleList] = useState([]);
+  const [selectedTitle, setSelectedTitle] = useState("");
   const [userInput, setUserInput] = useState("");
   const [apiOutput, setApiOutput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -12,7 +13,7 @@ const Home = () => {
     setIsGenerating(true);
 
     console.log("Calling OpenAI...");
-    const response = await fetch("/api/generateesp", {
+    const response = await fetch("/api/titlegen", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -22,10 +23,38 @@ const Home = () => {
 
     const data = await response.json();
     const { output } = data;
+
+    console.log("OpenAI replied...", output.text);
+
+    settitleList(JSON.parse(output.text).titulos);
+    setIsGenerating(false);
+  };
+
+  const generateBlog = async () => {
+    settitleList([]);
+    setSelectedTitle("");
+    console.log(selectedTitle);
+    setIsGenerating(true);
+
+    console.log("Calling OpenAI...");
+    const response = await fetch("/api/generateesp", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userInput: selectedTitle }),
+    });
+
+    const data = await response.json();
+    const { output } = data;
     console.log("OpenAI replied...", output.text);
 
     setApiOutput(`${output.text}`);
     setIsGenerating(false);
+  };
+
+  const selectTitle = (title) => {
+    setSelectedTitle(title);
   };
 
   return (
@@ -68,13 +97,32 @@ const Home = () => {
             <div className="output">
               <div className="output-header-container">
                 <div className="output-header">
-                  <h3>Output</h3>
+                  <h3>Artículo generado</h3>
                 </div>
               </div>
-              <div className="output-content">
-                <p>{apiOutput}</p>
-              </div>
+              <ReactMarkdown children={apiOutput}></ReactMarkdown>
             </div>
+          )}
+          {titleList.map((title) => (
+            <>
+              <p
+                style={{ color: selectedTitle === title && "red" }}
+                onClick={() => selectTitle(title)}
+              >
+                {title}
+              </p>
+            </>
+          ))}
+          {selectedTitle.length > 0 && (
+            <a className="generate-button" onClick={generateBlog}>
+              <div className="generate">
+                {isGenerating ? (
+                  <span className="loader"></span>
+                ) : (
+                  <p>Generate</p>
+                )}
+              </div>
+            </a>
           )}
         </div>
       </div>
